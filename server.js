@@ -4,11 +4,12 @@ const connectDB = require('./config/db');
 const config = require('./config/config'); // ✅ Missing import added
 const authRoutes = require('./Routes/authRoutes');
 const uploadRoutes = require('./Routes/uploadRoutes');
-
+const cors = require('cors');
 
 dotenv.config();
 const app = express();
 app.use(express.json());
+app.use(cors())
 
 // Connect to MongoDB
 connectDB();
