@@ -42,7 +42,7 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, mobile, password } = req.body;
-
+  //  console.log(req.body)
     if (!email && !mobile) {
       return res.status(400).json({ msg: 'Email ya mobile dena zaruri hai' });
     }

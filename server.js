@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const config = require('./config/config'); // ✅ Missing import added
 const authRoutes = require('./Routes/authRoutes');
+const uploadRoutes = require('./Routes/uploadRoutes');
+
 
 dotenv.config();
 const app = express();
@@ -13,6 +15,8 @@ connectDB();
 
 // Use Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/upload', uploadRoutes);
+
 
 // Start server
 app.listen(config.port, () => {
