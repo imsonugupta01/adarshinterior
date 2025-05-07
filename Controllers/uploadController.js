@@ -54,7 +54,35 @@ const uploadImage = async (req, res) => {
   }
 };
 
+const getAllPosters = async (req, res) => {
+    try {
+        const posters = await Poster.find().sort({ createdAt: -1 }); // Get all posters sorted by newest first
+        
+        if (!posters || posters.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No posters found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            count: posters.length,
+            data: posters
+        });
+
+    } catch (error) {
+        console.error('Error fetching posters:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while fetching posters',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
   uploadMiddleware,
   uploadImage,
+  getAllPosters
 };
