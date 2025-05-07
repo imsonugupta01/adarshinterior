@@ -4,6 +4,7 @@ const connectDB = require('./config/db');
 const config = require('./config/config'); // ✅ Missing import added
 const authRoutes = require('./Routes/authRoutes');
 const uploadRoutes = require('./Routes/uploadRoutes');
+const myWorkRoutes = require('./Routes/myWorkRoutes');
 
 
 dotenv.config();
@@ -16,6 +17,7 @@ connectDB();
 // Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/myWork', myWorkRoutes);
 
 
 // Start server
