@@ -1,9 +1,23 @@
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
-const cloudinary =require("../config/cloudinary");
+const path = require('path');
+const fs = require('fs');
+const cloudinary = require("../config/cloudinary");
 const Poster = require('../Models/Poster');
 
-// Middleware for handling file upload
+// ✅ Use a writable temp directory (works in AWS Lambda)
+const uploadPath = '/tmp/uploads';
+fs.mkdirSync(uploadPath, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)); // e.g. 1691456000000.png
+  }
+});
+
+const upload = multer({ storage });
 const uploadMiddleware = upload.single('image');
 
 const uploadImage = async (req, res) => {
@@ -12,26 +26,27 @@ const uploadImage = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const {text}=req.body;
+    const { text } = req.body;
 
-    // Upload image to Cloudinary
-    const result = await  cloudinary.uploader.upload(req.file.path, {
-      folder: 'uploads', // Optional folder in Cloudinary
+    // ✅ Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'uploads',
       use_filename: true,
       unique_filename: false,
     });
 
-    // You might want to delete the temporary file after upload
-    const fs = require('fs');
+    // ✅ Delete temp file after upload
     fs.unlinkSync(req.file.path);
 
-   const poster= new Poster({text:text,image_url:result.secure_url})
-   await poster.save()
+    const poster = new Poster({
+      text: text,
+      image_url: result.secure_url
+    });
+    await poster.save();
 
     res.status(200).json({
       message: 'Image uploaded successfully',
       poster: poster,
-   
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -39,10 +54,35 @@ const uploadImage = async (req, res) => {
   }
 };
 
+const getAllPosters = async (req, res) => {
+    try {
+        const posters = await Poster.find().sort({ createdAt: -1 }); // Get all posters sorted by newest first
+        
+        if (!posters || posters.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No posters found'
+            });
+        }
 
+        res.status(200).json({
+            success: true,
+            count: posters.length,
+            data: posters
+        });
+
+    } catch (error) {
+        console.error('Error fetching posters:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while fetching posters',
+            error: error.message
+        });
+    }
+};
 
 module.exports = {
   uploadMiddleware,
   uploadImage,
-
+  getAllPosters
 };

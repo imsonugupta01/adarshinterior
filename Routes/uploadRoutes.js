@@ -8,6 +8,8 @@ router.post('/upload',
   uploadController.uploadImage
 );
 
+router.get('/findAll',uploadController.getAllPosters)
+
 
 
 module.exports = router;
