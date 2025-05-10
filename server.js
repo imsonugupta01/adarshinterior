@@ -4,6 +4,7 @@ const connectDB = require('./config/db');
 const config = require('./config/config'); // ✅ Missing import added
 const authRoutes = require('./Routes/authRoutes');
 const uploadRoutes = require('./Routes/uploadRoutes');
+const myWorkRoutes =require('./Routes/myWorkRoutes')
 const cors = require('cors');
 
 dotenv.config();
@@ -17,7 +18,7 @@ connectDB();
 // Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
-
+app.use('/api/works',myWorkRoutes)
 
 app.get("/", (req, res) => {
     res.send("Live");

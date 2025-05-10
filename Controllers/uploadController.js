@@ -81,8 +81,28 @@ const getAllPosters = async (req, res) => {
     }
 };
 
+
+const deletePoster = async (req, res) => {
+  try {
+    const poster = await Poster.findById(req.body.id);
+
+    if (!poster) {
+      return res.status(404).json({ message: "Poster not found" });
+    }
+
+    await poster.deleteOne();
+
+    return res.status(200).json({ message: "Poster deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting poster:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
 module.exports = {
   uploadMiddleware,
   uploadImage,
-  getAllPosters
+  getAllPosters,
+  deletePoster
 };

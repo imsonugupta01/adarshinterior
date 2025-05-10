@@ -9,6 +9,7 @@ router.post('/upload',
 );
 
 router.get('/findAll',uploadController.getAllPosters)
+router.delete('/delete',uploadController.deletePoster)
 
 
 
