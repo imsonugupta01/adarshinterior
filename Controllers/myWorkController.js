@@ -59,29 +59,39 @@ exports.getAllMyWork = async (req, res) => {
       {
         $group: {
           _id: "$heading",
+          description: { $first: "$description" },
+          location: { $first: "$location" },
+          isActive: { $first: "$isActive" },
           works: {
             $push: {
               _id: "$_id",
-              description: "$description",
-              location: "$location",
               photo: "$photo",
-              video: "$video",
-              isActive: "$isActive",
-              createdAt: "$createdAt",
-              updatedAt: "$updatedAt"
+              video: "$video"
             }
           }
         }
       },
       {
-        $sort: { _id: 1 } // Optional: sorts by heading alphabetically
+        $project: {
+          _id: 0,
+          heading: "$_id",
+          description: 1,
+          location: 1,
+          isActive: 1,
+          works: 1
+        }
+      },
+      {
+        $sort: { heading: 1 }
       }
     ]);
+
     res.status(200).json(works);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 exports.getMyWorkById = async (req, res) => {
