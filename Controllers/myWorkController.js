@@ -52,14 +52,37 @@ exports.createMyWork = async (req, res) => {
 
 // Other functions remain the same
 
+
 exports.getAllMyWork = async (req, res) => {
   try {
-    const works = await MyWork.find();
+    const works = await MyWork.aggregate([
+      {
+        $group: {
+          _id: "$heading",
+          works: {
+            $push: {
+              _id: "$_id",
+              description: "$description",
+              location: "$location",
+              photo: "$photo",
+              video: "$video",
+              isActive: "$isActive",
+              createdAt: "$createdAt",
+              updatedAt: "$updatedAt"
+            }
+          }
+        }
+      },
+      {
+        $sort: { _id: 1 } // Optional: sorts by heading alphabetically
+      }
+    ]);
     res.status(200).json(works);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.getMyWorkById = async (req, res) => {
   try {

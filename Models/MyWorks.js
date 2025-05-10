@@ -23,6 +23,13 @@ const myWorkSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  isNotActive:{
+      type:String,
+      default:"N/a",
+      
+
+  }
 }, { timestamps: true });
+
 
 module.exports = mongoose.model('MyWork', myWorkSchema);
