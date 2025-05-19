@@ -4,20 +4,31 @@ const fs = require('fs');
 
 
 
+
+
 exports.createMyWork = async (req, res) => {
-    try {
-      const { heading, description, location } = req.body;
-  
-      if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded' });
-      }
-  
-      const mimeType = req.file.mimetype;
-  
+  try {
+    const { heading, description, location, type } = req.body;
+
+    // Normalize tags
+    let tags = [];
+    if (Array.isArray(req.body.tags)) {
+      tags = req.body.tags;
+    } else if (typeof req.body.tags === 'string') {
+      tags = [req.body.tags]; // single tag case
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No files uploaded' });
+    }
+
+    const uploadedFiles = [];
+
+    for (const file of req.files) {
+      const mimeType = file.mimetype;
       let resourceType = 'auto';
       let folder = 'mywork_misc';
-      let mediaUrl = '';
-  
+
       if (mimeType.startsWith('image/')) {
         resourceType = 'image';
         folder = 'mywork_photos';
@@ -25,101 +36,98 @@ exports.createMyWork = async (req, res) => {
         resourceType = 'video';
         folder = 'mywork_videos';
       }
-  
-      const result = await cloudinary.uploader.upload(req.file.path, {
+
+      const result = await cloudinary.uploader.upload(file.path, {
         resource_type: resourceType,
         folder,
       });
-  
-      fs.unlinkSync(req.file.path); // delete temp file
-  
-      mediaUrl = result.secure_url;
-  
-      const newWork = await MyWork.create({
-        heading,
-        description,
-        location,
-        photo: resourceType === 'image' ? mediaUrl : null,
-        video: resourceType === 'video' ? mediaUrl : null,
-      });
-  
-      res.status(201).json(newWork);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: error.message });
+
+      fs.unlinkSync(file.path); // delete temp file
+      uploadedFiles.push(result.secure_url);
     }
-  };
 
-// Other functions remain the same
+    const newWork = await MyWork.create({
+      heading,
+      description,
+      location,
+      type,
+      files: uploadedFiles,
+      tags, // properly parsed
+    });
 
-
-exports.getAllMyWork = async (req, res) => {
-  try {
-    const works = await MyWork.aggregate([
-      {
-        $group: {
-          _id: "$heading",
-          description: { $first: "$description" },
-          location: { $first: "$location" },
-          isActive: { $first: "$isActive" },
-          works: {
-            $push: {
-              _id: "$_id",
-              photo: "$photo",
-              video: "$video"
-            }
-          }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          heading: "$_id",
-          description: 1,
-          location: 1,
-          isActive: 1,
-          works: 1
-        }
-      },
-      {
-        $sort: { heading: 1 }
-      }
-    ]);
-
-    res.status(200).json(works);
+    res.status(201).json(newWork);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
+
+
+// controllers/myWorkController.js
+
+exports.getMyWorkByType = async (req, res) => {
+  try {
+    const { type } = req.params;
+
+    const works = await MyWork.find({ type });
+
+    if (!works.length) {
+      return res.status(404).json({ message: `No work entries found for type '${type}'` });
+    }
+
+    res.status(200).json(works);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch work entries by type' });
+  }
+};
+
+// controllers/myWorkController.js
+
+exports.getAllMyWork = async (req, res) => {
+  try {
+    const works = await MyWork.find().sort({ createdAt: -1 }); // latest first
+    res.status(200).json(works);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch work entries' });
+  }
+};
 
 
 exports.getMyWorkById = async (req, res) => {
   try {
-    const work = await MyWork.findById(req.params.id);
-    if (!work) return res.status(404).json({ message: 'Not found' });
+    const { id } = req.params;
+    const work = await MyWork.findById(id);
+
+    if (!work) {
+      return res.status(404).json({ message: 'Work entry not found' });
+    }
+
     res.status(200).json(work);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch the work entry' });
   }
 };
 
-exports.updateMyWork = async (req, res) => {
-  try {
-    const updated = await MyWork.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    res.status(200).json(updated);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
+
+// controllers/myWorkController.js
 
 exports.deleteMyWork = async (req, res) => {
   try {
-    await MyWork.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'Deleted successfully' });
+    const { id } = req.params;
+
+    const work = await MyWork.findByIdAndDelete(id);
+
+    if (!work) {
+      return res.status(404).json({ message: 'Work entry not found' });
+    }
+
+    res.status(200).json({ message: 'Work entry deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete work entry' });
   }
 };

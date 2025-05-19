@@ -7,18 +7,19 @@ const {
   getMyWorkById,
   updateMyWork,
   deleteMyWork,
+  getMyWorkByType,
 } = require('../Controllers/myWorkController');
 
 // POST route — accepts only one file (photo or video) at a time
 router.post(
   '/',
-  upload.single('file'), // field name should be 'file' in the request
+  upload.array('files', 10), // allow uploading up to 10 files
   createMyWork
 );
 
 router.get('/', getAllMyWork);
 router.get('/:id', getMyWorkById);
-router.put('/:id', updateMyWork);
+router.put('/type/:type', getMyWorkByType);
 router.delete('/:id', deleteMyWork);
 
 module.exports = router;
