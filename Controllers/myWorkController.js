@@ -131,3 +131,19 @@ exports.deleteMyWork = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete work entry' });
   }
 };
+
+
+exports.findTypes = async (req, res) => {
+  try {
+    const types = await MyWork.distinct('type');
+
+    if (!types || types.length === 0) {
+      return res.status(404).json({ message: 'No types found' });
+    }
+
+    res.status(200).json({ types });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch unique types' });
+  }
+};
