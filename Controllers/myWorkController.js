@@ -147,3 +147,31 @@ exports.findTypes = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch unique types' });
   }
 };
+
+
+// controllers/myWorkController.js
+
+exports.getFilesByType = async (req, res) => {
+  try {
+    const { type } = req.query;
+
+    if (!type) {
+      return res.status(400).json({ message: 'Type is required' });
+    }
+
+    // Find all MyWork entries matching the type
+    const works = await MyWork.find({ type });
+
+    if (!works || works.length === 0) {
+      return res.status(404).json({ message: 'No work entries found for this type' });
+    }
+
+    // Extract all files from matching documents
+    const allFiles = works.flatMap(work => work.files);
+
+    res.status(200).json({ files: allFiles });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch files' });
+  }
+};

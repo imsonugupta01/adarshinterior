@@ -9,6 +9,7 @@ const {
   deleteMyWork,
   getMyWorkByType,
   findTypes,
+  getFilesByType,
 } = require('../Controllers/myWorkController');
 
 // POST route — accepts only one file (photo or video) at a time
@@ -23,5 +24,7 @@ router.get('/:id', getMyWorkById);
 router.put('/type/:type', getMyWorkByType);
 router.delete('/:id', deleteMyWork);
 router.post('/allTypes',findTypes)
+router.post('/files',getFilesByType)
+
 
 module.exports = router;
